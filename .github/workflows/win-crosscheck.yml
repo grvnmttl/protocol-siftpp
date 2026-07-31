@@ -1,0 +1,27 @@
+name: Windows cross-platform check
+on: workflow_dispatch
+jobs:
+  run-flagship-case:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - name: Sync deps (uv, lockfile-pinned)
+        run: uv sync
+      - name: Guardrail tests first (no key needed)
+        run: |
+          uv run siftpp-spoliation-test
+          uv run siftpp-tamper-test
+      - name: Investigate flagship case (needs evidence pre-staged in repo or downloaded separately)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          uv run siftpp-investigate --provider anthropic `
+            --evidence evidence\srl-2018-base-file-memory\extracted\base-file-memory.img `
+            --out analysis\srl-2018-base-file-memory `
+            --case-id srl-2018-base-file-memory `
+            --offline --max-iterations 3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-run
+          path: analysis/srl-2018-base-file-memory/**
