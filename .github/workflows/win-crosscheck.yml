@@ -8,20 +8,20 @@ jobs:
       - uses: astral-sh/setup-uv@v3
       - name: Sync deps (uv, lockfile-pinned)
         run: uv sync
-      - name: Guardrail tests first (no key needed)
+      - name: Demo (deterministic, no key needed — generates audit.jsonl for the tamper test)
+        run: uv run siftpp-demo
+      - name: Guardrail tests (no key needed)
         run: |
           uv run siftpp-spoliation-test
           uv run siftpp-tamper-test
-      - name: Investigate flagship case (needs evidence pre-staged in repo or downloaded separately)
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          uv run siftpp-investigate --provider anthropic `
-            --evidence evidence\srl-2018-base-file-memory\extracted\base-file-memory.img `
-            --out analysis\srl-2018-base-file-memory `
-            --case-id srl-2018-base-file-memory `
-            --offline --max-iterations 3
+      # Investigate step deferred: needs case data from the SANS Egnyte link,
+      # which is expired as of Round 3 (reported to organizers). Also needs
+      # ANTHROPIC_API_KEY as a repo secret, not yet set. Re-add once both are
+      # in place.
       - uses: actions/upload-artifact@v4
         with:
-          name: windows-run
-          path: analysis/srl-2018-base-file-memory/**
+          name: windows-guardrail-results
+          path: |
+            analysis/demo/**
+            analysis/spoliation/**
+            analysis/tamper/**
